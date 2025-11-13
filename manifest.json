@@ -1,0 +1,47 @@
+{
+  "name": "EJJ Soluções - Segurança Eletrônica",
+  "short_name": "EJJ Soluções",
+  "description": "Sistemas de segurança eletrônica monitorados 24 horas com profissionais altamente preparados",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#23b76c",
+  "icons": [
+    {
+      "src": "https://pineapple.cdn.testpress.in/static/image/a49f4bd5-c06c-4fa1-a68b-2a3c0bb94acb-1024x1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://pineapple.cdn.testpress.in/static/image/a49f4bd5-c06c-4fa1-a68b-2a3c0bb94acb-1024x1024.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://pineapple.cdn.testpress.in/static/image/a49f4bd5-c06c-4fa1-a68b-2a3c0bb94acb-1024x1024.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Solicitar Visita Técnica",
+      "short_name": "Visita Técnica",
+      "description": "Solicite uma visita técnica de nossos profissionais",
+      "url": "/?action=solicitar-visita",
+      "icons": [
+        {
+          "src": "https://pineapple.cdn.testpress.in/static/image/a49f4bd5-c06c-4fa1-a68b-2a3c0bb94acb-1024x1024.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
