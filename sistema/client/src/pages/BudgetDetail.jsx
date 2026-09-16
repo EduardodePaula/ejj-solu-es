@@ -12,6 +12,7 @@ export default function BudgetDetail() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   function load() {
     api.get(`/budgets/${id}`).then((res) => setBudget(res.data));
@@ -48,6 +49,15 @@ export default function BudgetDetail() {
   }
 
   if (!budget) return <p>Carregando...</p>;
+
+  const approvalLink = `${window.location.origin}/aprovar/${budget.public_token}`;
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(approvalLink).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  }
 
   return (
     <div>
@@ -125,7 +135,30 @@ export default function BudgetDetail() {
             </button>
           </div>
         )}
+
+        {budget.client_signature_name && (
+          <p style={{ marginTop: '1rem' }} className="text-muted">
+            ✅ Aprovado pelo próprio cliente (<strong>{budget.client_signature_name}</strong>) em{' '}
+            {new Date(budget.client_approved_at).toLocaleString('pt-BR')}.
+          </p>
+        )}
       </div>
+
+      {(budget.status === 'rascunho' || budget.status === 'enviado') && (
+        <div className="card" style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ marginTop: 0 }}>Link para o cliente aprovar e assinar</h3>
+          <p className="text-muted" style={{ marginTop: 0 }}>
+            Envie este link para o cliente por WhatsApp ou e-mail. Ele poderá revisar o orçamento e aprovar digitando o
+            nome dele, sem precisar de login no sistema.
+          </p>
+          <div className="share-link-box">
+            <input readOnly value={approvalLink} onFocus={(e) => e.target.select()} />
+            <button type="button" className="btn small" onClick={handleCopyLink}>
+              {linkCopied ? 'Copiado!' : 'Copiar link'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {result && (
         <div className="card">

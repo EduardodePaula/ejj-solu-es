@@ -27,6 +27,7 @@ export default function Login() {
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={handleSubmit}>
+        <img className="brand-logo" src="/logo.jpg" alt="EJJ Soluções" />
         <h1>Sistema EJJ Soluções</h1>
         <p className="subtitle">Gestão de clientes, orçamentos, OS, financeiro e contratos</p>
 

@@ -12,6 +12,7 @@ import ServiceOrders from './pages/ServiceOrders.jsx';
 import Financial from './pages/Financial.jsx';
 import Contracts from './pages/Contracts.jsx';
 import ContractDetail from './pages/ContractDetail.jsx';
+import PublicBudgetApproval from './pages/PublicBudgetApproval.jsx';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/aprovar/:token" element={<PublicBudgetApproval />} />
       <Route
         path="/*"
         element={

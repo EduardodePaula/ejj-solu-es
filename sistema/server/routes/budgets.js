@@ -1,10 +1,9 @@
 const express = require('express');
+const crypto = require('crypto');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { nextCode } = require('../services/codeGenerator');
-const { replaceBudgetItems, recalcBudgetTotals } = require('../services/budgetService');
-const { createFromBudget } = require('../services/serviceOrderService');
-const { createReceivable } = require('../services/financialService');
+const { replaceBudgetItems, recalcBudgetTotals, approveBudget, rejectBudget } = require('../services/budgetService');
 const { renderBudgetPdf } = require('../services/pdfService');
 
 const router = express.Router();
@@ -78,12 +77,13 @@ router.post('/', (req, res) => {
   });
 
   const code = nextCode('ORC', 'budgets');
+  const publicToken = crypto.randomBytes(24).toString('hex');
   const info = db
     .prepare(
-      `INSERT INTO budgets (code, client_id, status, discount_pct, validity_days, notes)
-       VALUES (?, ?, 'rascunho', ?, ?, ?)`
+      `INSERT INTO budgets (code, client_id, status, discount_pct, validity_days, notes, public_token)
+       VALUES (?, ?, 'rascunho', ?, ?, ?, ?)`
     )
-    .run(code, client_id, discount_pct || 0, validity_days || 15, notes || null);
+    .run(code, client_id, discount_pct || 0, validity_days || 15, notes || null, publicToken);
 
   replaceBudgetItems(info.lastInsertRowid, resolvedItems);
 
@@ -127,38 +127,21 @@ router.post('/:id/send', (req, res) => {
 
 // Aprovar orçamento: muda status e gera automaticamente a Ordem de Serviço.
 router.post('/:id/approve', (req, res) => {
-  const budget = db.prepare('SELECT * FROM budgets WHERE id = ?').get(req.params.id);
-  if (!budget) return res.status(404).json({ error: 'Orçamento não encontrado' });
-  if (budget.status === 'aprovado') {
-    return res.status(400).json({ error: 'Orçamento já aprovado' });
+  try {
+    const { serviceOrder, receivable } = approveBudget(req.params.id);
+    res.json({ budget: getFullBudget(req.params.id), serviceOrder, receivable });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
   }
-
-  db.prepare(
-    `UPDATE budgets SET status='aprovado', approved_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
-  ).run(req.params.id);
-
-  const updatedBudget = db.prepare('SELECT * FROM budgets WHERE id = ?').get(req.params.id);
-  const serviceOrder = createFromBudget(updatedBudget);
-  const receivable = createReceivable({
-    client_id: updatedBudget.client_id,
-    service_order_id: serviceOrder.id,
-    description: `Referente ao orçamento ${updatedBudget.code} / OS ${serviceOrder.code}`,
-    amount: updatedBudget.total,
-    dueInDays: 7,
-  });
-
-  res.json({ budget: getFullBudget(req.params.id), serviceOrder, receivable });
 });
 
 router.post('/:id/reject', (req, res) => {
-  const budget = db.prepare('SELECT * FROM budgets WHERE id = ?').get(req.params.id);
-  if (!budget) return res.status(404).json({ error: 'Orçamento não encontrado' });
-
-  db.prepare(
-    `UPDATE budgets SET status='rejeitado', rejected_at=datetime('now'), updated_at=datetime('now') WHERE id=?`
-  ).run(req.params.id);
-
-  res.json(getFullBudget(req.params.id));
+  try {
+    rejectBudget(req.params.id);
+    res.json(getFullBudget(req.params.id));
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
 });
 
 router.get('/:id/pdf', (req, res) => {

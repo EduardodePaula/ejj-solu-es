@@ -61,7 +61,10 @@ CREATE TABLE IF NOT EXISTS budgets (
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   approved_at TEXT,
-  rejected_at TEXT
+  rejected_at TEXT,
+  public_token TEXT UNIQUE,
+  client_signature_name TEXT,
+  client_approved_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS budget_items (
@@ -135,5 +138,26 @@ CREATE TABLE IF NOT EXISTS contracts (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `);
+
+// Migração leve para bancos criados antes da funcionalidade de aprovação por
+// link público — adiciona as colunas caso ainda não existam.
+const budgetColumns = db.prepare("PRAGMA table_info(budgets)").all().map((c) => c.name);
+if (!budgetColumns.includes('public_token')) {
+  db.exec('ALTER TABLE budgets ADD COLUMN public_token TEXT');
+}
+if (!budgetColumns.includes('client_signature_name')) {
+  db.exec('ALTER TABLE budgets ADD COLUMN client_signature_name TEXT');
+}
+if (!budgetColumns.includes('client_approved_at')) {
+  db.exec('ALTER TABLE budgets ADD COLUMN client_approved_at TEXT');
+}
+
+// Preenche o token de orçamentos antigos que ainda não tinham um.
+const crypto = require('crypto');
+const withoutToken = db.prepare('SELECT id FROM budgets WHERE public_token IS NULL').all();
+if (withoutToken.length > 0) {
+  const setToken = db.prepare('UPDATE budgets SET public_token = ? WHERE id = ?');
+  withoutToken.forEach((row) => setToken.run(crypto.randomBytes(24).toString('hex'), row.id));
+}
 
 module.exports = db;

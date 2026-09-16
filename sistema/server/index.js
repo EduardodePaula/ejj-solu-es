@@ -14,6 +14,7 @@ const financialRoutes = require('./routes/financial');
 const contractsRoutes = require('./routes/contracts');
 const dashboardRoutes = require('./routes/dashboard');
 const cronRoutes = require('./routes/cron');
+const publicBudgetsRoutes = require('./routes/publicBudgets');
 
 const app = express();
 app.use(cors());
@@ -28,6 +29,7 @@ app.use('/api/financial', financialRoutes);
 app.use('/api/contracts', contractsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/cron', cronRoutes);
+app.use('/api/public/budgets', publicBudgetsRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

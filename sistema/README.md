@@ -15,6 +15,14 @@ Aplicação web para gerenciar o dia a dia da EJJ Soluções:
 - **Contratos de manutenção preventiva**: geração automática do contrato
   completo, com cláusulas selecionadas conforme os parâmetros informados
   (frequência, SLA, equipamentos cobertos, renovação automática etc.).
+- **Aprovação e assinatura por link público**: cada orçamento tem um link
+  único (`/aprovar/:token`) que pode ser enviado por WhatsApp/e-mail — o
+  cliente aprova ou recusa direto pelo navegador, sem precisar de login,
+  digitando o nome como assinatura. A aprovação já dispara a geração
+  automática da Ordem de Serviço e da conta a receber.
+
+Visual com a logo e as cores da EJJ Soluções, em um layout inspirado em
+marketplaces (navbar superior, cards e tabelas arredondados).
 
 ## Stack
 

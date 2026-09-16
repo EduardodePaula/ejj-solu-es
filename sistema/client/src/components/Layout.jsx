@@ -22,22 +22,27 @@ export default function Layout({ children }) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">EJJ Soluções</div>
-        <nav>
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end}>
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
+      <header className="topbar">
+        <div className="brand">
+          <img src="/logo.jpg" alt="EJJ Soluções" />
+          <span>EJJ Soluções</span>
+        </div>
         <div className="user-box">
-          <div>{user?.name}</div>
+          <span>{user?.name}</span>
           <button className="btn secondary small" onClick={handleLogout}>
             Sair
           </button>
         </div>
-      </aside>
+      </header>
+
+      <nav className="subnav">
+        {links.map((link) => (
+          <NavLink key={link.to} to={link.to} end={link.end}>
+            {link.label}
+          </NavLink>
+        ))}
+      </nav>
+
       <main className="main-content">{children}</main>
     </div>
   );
