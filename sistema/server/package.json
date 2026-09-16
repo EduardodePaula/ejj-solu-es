@@ -9,6 +9,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.0",
     "better-sqlite3": "^11.3.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

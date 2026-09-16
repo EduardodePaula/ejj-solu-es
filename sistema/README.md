@@ -20,6 +20,11 @@ Aplicação web para gerenciar o dia a dia da EJJ Soluções:
   cliente aprova ou recusa direto pelo navegador, sem precisar de login,
   digitando o nome como assinatura. A aprovação já dispara a geração
   automática da Ordem de Serviço e da conta a receber.
+- **Escopo do projeto redigido por IA (opcional)**: se configurada uma chave
+  da API da Claude, o PDF do orçamento usa a IA para escrever o parágrafo de
+  "Escopo do projeto" com base nos itens do catálogo adicionados. Sem a
+  chave, o sistema usa um texto automático mais simples — o PDF funciona
+  normalmente de qualquer jeito (veja `ANTHROPIC_API_KEY` no `.env.example`).
 
 Visual com a logo e as cores da EJJ Soluções, em um layout inspirado em
 marketplaces (navbar superior, cards e tabelas arredondados).

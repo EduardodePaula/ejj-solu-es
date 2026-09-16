@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../db');
 const { approveBudget, rejectBudget } = require('../services/budgetService');
 const { renderBudgetPdf } = require('../services/pdfService');
+const { generateProjectScope } = require('../services/proposalAi');
 
 const router = express.Router();
 
@@ -30,10 +31,11 @@ router.get('/:token', (req, res) => {
   res.json(budget);
 });
 
-router.get('/:token/pdf', (req, res) => {
+router.get('/:token/pdf', async (req, res) => {
   const budget = getBudgetByToken(req.params.token);
   if (!budget) return res.status(404).json({ error: 'Orçamento não encontrado' });
-  renderBudgetPdf(res, budget, budget.client, budget.items);
+  const aiScope = await generateProjectScope(budget.items, budget.notes);
+  renderBudgetPdf(res, budget, budget.client, budget.items, { aiScope });
 });
 
 router.post('/:token/approve', (req, res) => {

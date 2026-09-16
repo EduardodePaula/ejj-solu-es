@@ -5,6 +5,7 @@ const { requireAuth } = require('../middleware/auth');
 const { nextCode } = require('../services/codeGenerator');
 const { replaceBudgetItems, recalcBudgetTotals, approveBudget, rejectBudget } = require('../services/budgetService');
 const { renderBudgetPdf } = require('../services/pdfService');
+const { generateProjectScope } = require('../services/proposalAi');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -146,10 +147,11 @@ router.post('/:id/reject', (req, res) => {
   }
 });
 
-router.get('/:id/pdf', (req, res) => {
+router.get('/:id/pdf', async (req, res) => {
   const budget = getFullBudget(req.params.id);
   if (!budget) return res.status(404).json({ error: 'Orçamento não encontrado' });
-  renderBudgetPdf(res, budget, budget.client, budget.items);
+  const aiScope = await generateProjectScope(budget.items, budget.notes);
+  renderBudgetPdf(res, budget, budget.client, budget.items, { aiScope });
 });
 
 router.delete('/:id', (req, res) => {

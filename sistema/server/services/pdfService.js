@@ -271,7 +271,7 @@ function drawHeaderBand(doc, title, subtitle) {
   doc.fillColor(TEXT).font('Helvetica');
 }
 
-function renderBudgetPdf(res, budget, client, items) {
+function renderBudgetPdf(res, budget, client, items, opts = {}) {
   const filename = `orcamento-${budget.code}.pdf`;
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
@@ -314,8 +314,11 @@ function renderBudgetPdf(res, budget, client, items) {
   bulletList(doc, SCOPE_ITEMS);
 
   sectionHeading(doc, '2.1 Escopo do projeto');
-  const autoScope = buildProjectScopeText(items);
-  paragraph(doc, autoScope || 'A detalhar conforme visita técnica e itens orçados abaixo.');
+  // opts.aiScope vem da Claude (services/proposalAi.js), gerado a partir dos
+  // itens do orçamento; se a integração não estiver configurada (ou falhar),
+  // cai automaticamente no texto montado sem IA.
+  const scopeText = opts.aiScope || buildProjectScopeText(items) || 'A detalhar conforme visita técnica e itens orçados abaixo.';
+  paragraph(doc, scopeText);
   if (budget.notes && budget.notes.trim()) {
     doc.moveDown(0.4);
     paragraph(doc, `Observações adicionais: ${budget.notes.trim()}`);
