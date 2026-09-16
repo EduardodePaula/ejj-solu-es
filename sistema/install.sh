@@ -71,9 +71,17 @@ fi
 # 2) Dependências de build (better-sqlite3 compila um binário nativo)
 # ---------------------------------------------------------------------------
 info "Garantindo build-essential e python3 (necessários para compilar dependências nativas)..."
-$SUDO apt-get update -y
-$SUDO apt-get install -y build-essential python3
-success "Dependências de sistema OK."
+if dpkg -s build-essential >/dev/null 2>&1 && dpkg -s python3 >/dev/null 2>&1; then
+  success "build-essential e python3 já instalados."
+else
+  # Não falha se algum repositório de terceiros (ex: Elastic, Docker, PPAs) der
+  # erro de assinatura/rede — isso é comum em instalações de Kali com vários
+  # repositórios extras e não impede o apt-get install de funcionar com o
+  # cache dos repositórios que sincronizaram com sucesso.
+  $SUDO apt-get update -y || warn "Alguns repositórios não puderam ser atualizados (provavelmente repositórios de terceiros alheios a este projeto) — continuando mesmo assim."
+  $SUDO apt-get install -y build-essential python3
+  success "Dependências de sistema OK."
+fi
 
 # ---------------------------------------------------------------------------
 # 3) Arquivo .env do backend
