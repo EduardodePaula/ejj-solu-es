@@ -22,7 +22,30 @@ Aplicação web para gerenciar o dia a dia da EJJ Soluções:
 - Frontend: React + Vite — SPA em `client/`, buildado como arquivos estáticos
   servidos pelo próprio backend (uma única aplicação Node para publicar).
 
-## Rodando localmente
+## Instalação rápida (Kali Linux / Debian / Ubuntu)
+
+```bash
+cd sistema
+./install.sh
+```
+
+O script instala o Node.js (se necessário), as dependências de sistema, cria o
+`server/.env` (perguntando o e-mail/senha do administrador), instala e builda
+o backend e o frontend. Ao final:
+
+```bash
+cd server && npm start        # acesse http://localhost:4000
+```
+
+Opções úteis:
+
+```bash
+./install.sh --start          # instala e já inicia em primeiro plano
+./install.sh --pm2            # instala e deixa rodando em segundo plano (PM2), inclusive após reiniciar o Kali
+./install.sh --non-interactive   # não pergunta nada, usa ADMIN_EMAIL/ADMIN_PASSWORD do ambiente ou gera uma senha aleatória
+```
+
+## Rodando localmente (passo a passo manual)
 
 ```bash
 # Backend
