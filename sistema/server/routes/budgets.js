@@ -13,7 +13,17 @@ router.use(requireAuth);
 function getFullBudget(id) {
   const budget = db.prepare('SELECT * FROM budgets WHERE id = ?').get(id);
   if (!budget) return null;
-  const items = db.prepare('SELECT * FROM budget_items WHERE budget_id = ?').all(id);
+  // O category vem do catálogo (produto/serviço) para permitir separar
+  // equipamentos de mão de obra no PDF do orçamento; itens avulsos (sem
+  // catalog_item_id) entram como "servico" por padrão.
+  const items = db
+    .prepare(
+      `SELECT bi.*, COALESCE(ci.category, 'servico') AS category
+       FROM budget_items bi
+       LEFT JOIN catalog_items ci ON ci.id = bi.catalog_item_id
+       WHERE bi.budget_id = ?`
+    )
+    .all(id);
   const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(budget.client_id);
   return { ...budget, items, client };
 }
