@@ -4,12 +4,18 @@ import api from '../api';
 
 const emptyForm = { name: '', document: '', type: 'pessoa_fisica', email: '', phone: '', address: '', city: '', state: '', zip: '' };
 
+function onlyDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [q, setQ] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState('');
+  const [cnpjLoading, setCnpjLoading] = useState(false);
+  const [cnpjError, setCnpjError] = useState('');
 
   function load(query) {
     api.get('/clients', { params: query ? { q: query } : {} }).then((res) => setClients(res.data));
@@ -22,6 +28,48 @@ export default function Clients() {
   function handleSearch(e) {
     e.preventDefault();
     load(q);
+  }
+
+  function openCreate() {
+    setForm(emptyForm);
+    setError('');
+    setCnpjError('');
+    setShowForm(true);
+  }
+
+  // Busca os dados da empresa na Receita Federal (via BrasilAPI) e preenche
+  // o formulário automaticamente assim que um CNPJ válido (14 dígitos) é informado.
+  async function lookupCnpj(digits) {
+    setCnpjError('');
+    setCnpjLoading(true);
+    try {
+      const { data } = await api.get(`/clients/cnpj/${digits}`);
+      setForm((prev) => ({
+        ...prev,
+        name: data.name || prev.name,
+        type: 'pessoa_juridica',
+        document: data.document || digits,
+        email: data.email || prev.email,
+        phone: data.phone || prev.phone,
+        address: data.address || prev.address,
+        city: data.city || prev.city,
+        state: data.state || prev.state,
+        zip: data.zip || prev.zip,
+      }));
+    } catch (err) {
+      setCnpjError(err.response?.data?.error || 'Não foi possível consultar o CNPJ.');
+    } finally {
+      setCnpjLoading(false);
+    }
+  }
+
+  function handleDocumentChange(value) {
+    setForm({ ...form, document: value });
+  }
+
+  function handleDocumentBlur() {
+    const digits = onlyDigits(form.document);
+    if (digits.length === 14) lookupCnpj(digits);
   }
 
   async function handleCreate(e) {
@@ -41,7 +89,7 @@ export default function Clients() {
     <div>
       <div className="page-header">
         <h1>Clientes</h1>
-        <button className="btn" onClick={() => setShowForm(true)}>
+        <button className="btn" onClick={openCreate}>
           + Novo cliente
         </button>
       </div>
@@ -85,9 +133,6 @@ export default function Clients() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ marginTop: 0 }}>Novo cliente</h2>
             <form onSubmit={handleCreate}>
-              <label>Nome *</label>
-              <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-
               <div className="form-row">
                 <div>
                   <label>Tipo</label>
@@ -98,9 +143,31 @@ export default function Clients() {
                 </div>
                 <div>
                   <label>Documento (CPF/CNPJ)</label>
-                  <input value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} />
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <input
+                      value={form.document}
+                      onChange={(e) => handleDocumentChange(e.target.value)}
+                      onBlur={handleDocumentBlur}
+                      placeholder="Só CNPJ: preenche o resto sozinho"
+                    />
+                    {form.type === 'pessoa_juridica' && (
+                      <button
+                        type="button"
+                        className="btn secondary small"
+                        disabled={cnpjLoading || onlyDigits(form.document).length !== 14}
+                        onClick={() => lookupCnpj(onlyDigits(form.document))}
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        {cnpjLoading ? 'Buscando...' : 'Buscar CNPJ'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
+              {cnpjError && <p className="error-text">{cnpjError}</p>}
+
+              <label>Nome {form.type === 'pessoa_juridica' ? '(Razão social) ' : ''}*</label>
+              <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
 
               <div className="form-row">
                 <div>

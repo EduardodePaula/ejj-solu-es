@@ -1,9 +1,21 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { lookupCnpj } = require('../services/cnpjLookup');
 
 const router = express.Router();
 router.use(requireAuth);
+
+// Consulta pública de CNPJ para pré-preencher o cadastro automaticamente.
+// Precisa vir antes de "/:id" para não ser interpretada como um ID de cliente.
+router.get('/cnpj/:cnpj', async (req, res) => {
+  try {
+    const data = await lookupCnpj(req.params.cnpj);
+    res.json(data);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
 
 router.get('/', (req, res) => {
   const { q } = req.query;
