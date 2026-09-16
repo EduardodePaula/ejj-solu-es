@@ -203,6 +203,15 @@ function fillPlaceholders(text, contract, client) {
   return text.replace(/{{\s*(\w+)\s*}}/g, (_, key) => (values[key] !== undefined ? values[key] : ''));
 }
 
+// Retorna as cláusulas aplicáveis a este contrato, já com os placeholders
+// preenchidos — usado tanto para montar o texto puro quanto para o PDF
+// estilizado (cada cláusula renderizada com seu próprio título destacado).
+function getApplicableClauses(contract, client) {
+  return CLAUSES.filter((c) => clauseApplies(c.appliesWhen, contract))
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((c) => ({ title: c.title, body: fillPlaceholders(c.body, contract, client) }));
+}
+
 // Monta o texto completo do contrato, selecionando apenas as cláusulas
 // aplicáveis aos parâmetros informados e substituindo os placeholders.
 function generateContractText(contract, client) {
@@ -229,4 +238,4 @@ function generateContractText(contract, client) {
   return header + body + footer;
 }
 
-module.exports = { CLAUSES, generateContractText, FREQUENCY_LABELS };
+module.exports = { CLAUSES, generateContractText, getApplicableClauses, FREQUENCY_LABELS };

@@ -1,5 +1,6 @@
 const path = require('path');
 const PDFDocument = require('pdfkit');
+const { getApplicableClauses, FREQUENCY_LABELS } = require('../clauseTemplates');
 
 const LOGO_PATH = path.join(__dirname, '..', 'assets', 'logo.jpg');
 
@@ -232,7 +233,7 @@ function drawFooters(doc) {
   }
 }
 
-function drawHeaderBand(doc, subtitle) {
+function drawHeaderBand(doc, title, subtitle) {
   const width = doc.page.width;
   doc.rect(0, 0, width, 95).fill(NAVY);
 
@@ -246,7 +247,7 @@ function drawHeaderBand(doc, subtitle) {
     .fillColor('#ffffff')
     .font('Helvetica-Bold')
     .fontSize(18)
-    .text('Proposta Comercial', 175, 28, { width: width - 225 })
+    .text(title, 175, 28, { width: width - 225 })
     .font('Helvetica')
     .fontSize(11)
     .text(subtitle, 175, 52, { width: width - 225 });
@@ -263,7 +264,7 @@ function renderBudgetPdf(res, budget, client, items) {
   const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
   doc.pipe(res);
 
-  drawHeaderBand(doc, 'Sistema de Segurança Eletrônica');
+  drawHeaderBand(doc, 'Proposta Comercial', 'Sistema de Segurança Eletrônica');
 
   doc.fontSize(10).fillColor(TEXT).font('Helvetica-Bold');
   doc.text(`CLIENTE: ${(client.name || '').toUpperCase()}`);
@@ -370,20 +371,76 @@ function renderContractPdf(res, contract, client) {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
 
-  const doc = new PDFDocument({ margin: 50 });
+  const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true });
   doc.pipe(res);
 
-  doc.fontSize(11).fillColor('#000');
-  (contract.generated_text || '').split('\n').forEach((line) => {
-    if (/^CONTRATO DE/.test(line)) {
-      doc.moveDown(0.5).fontSize(13).text(line, { align: 'center' }).fontSize(11).moveDown(0.5);
-    } else if (/^Cláusula/.test(line)) {
-      doc.moveDown(0.8).fontSize(11).fillColor(BLUE).text(line).fillColor('#000');
-    } else {
-      doc.fontSize(10).text(line);
-    }
+  drawHeaderBand(doc, 'Contrato de Manutenção', 'Segurança Eletrônica e Automação');
+
+  doc.fontSize(10).fillColor(TEXT).font('Helvetica-Bold');
+  doc.text(`CONTRATANTE: ${(client.name || '').toUpperCase()}${client.document ? ' - DOC: ' + client.document : ''}`);
+  doc.text(`CONTRATO Nº: ${contract.code}`);
+  doc.text(`INÍCIO DA VIGÊNCIA: ${new Date(contract.start_date).toLocaleDateString('pt-BR')}`);
+  doc.font('Helvetica');
+
+  doc
+    .moveDown(0.8)
+    .strokeColor(BLUE)
+    .lineWidth(1.5)
+    .moveTo(doc.page.margins.left, doc.y)
+    .lineTo(doc.page.width - doc.page.margins.right, doc.y)
+    .stroke();
+
+  doc.moveDown(0.8).fontSize(13).fillColor(NAVY).font('Helvetica-Bold');
+  doc.text('Contrato de Prestação de Serviços de Manutenção Preventiva');
+  doc.font('Helvetica').fillColor(TEXT);
+
+  doc.moveDown(0.6);
+  paragraph(
+    doc,
+    `CONTRATADA: EJJ Soluções em Segurança Eletrônica. CONTRATANTE: ${client.name}${
+      client.document ? ' (Doc: ' + client.document + ')' : ''
+    }. As partes acima qualificadas firmam o presente contrato, que se regerá pelas cláusulas e condições a seguir.`
+  );
+
+  sectionHeading(doc, 'Resumo do Contrato');
+  const summaryRows = [
+    ['Frequência de manutenção', FREQUENCY_LABELS[contract.frequency] || contract.frequency],
+    ['SLA de atendimento', `${contract.sla_hours} horas`],
+    ['Valor mensal', money(contract.monthly_value)],
+    ['Dia de vencimento', `Todo dia ${contract.payment_day}`],
+    ['Vigência', `${contract.duration_months} meses (até ${new Date(contract.end_date).toLocaleDateString('pt-BR')})`],
+    ['Renovação automática', contract.auto_renew ? 'Sim' : 'Não'],
+  ];
+  if (contract.equipment_covered) {
+    summaryRows.push(['Equipamentos cobertos', contract.equipment_covered]);
+  }
+  summaryRows.forEach(([label, value]) => {
+    ensureSpace(doc, 16);
+    doc.fontSize(10).font('Helvetica-Bold').fillColor(TEXT).text(`${label}: `, { continued: true }).font('Helvetica').text(value);
   });
 
+  getApplicableClauses(contract, client).forEach((clause) => {
+    sectionHeading(doc, clause.title);
+    paragraph(doc, clause.body);
+  });
+
+  doc.moveDown(1);
+  paragraph(
+    doc,
+    'E por estarem justas e contratadas, as partes assinam o presente instrumento, inclusive de forma eletrônica, para que produza seus efeitos legais.'
+  );
+
+  ensureSpace(doc, 110);
+  doc.moveDown(2);
+  doc.text('________________________________');
+  doc.font('Helvetica-Bold').text('EJJ Soluções em Segurança Eletrônica');
+  doc.font('Helvetica').text('Eduardo Rodrigues — Gerente de Projetos (CONTRATADA)');
+  doc.moveDown(1.5);
+  doc.text('________________________________');
+  doc.font('Helvetica-Bold').text(client.name);
+  doc.font('Helvetica').text('Responsável (CONTRATANTE)');
+
+  drawFooters(doc);
   doc.end();
 }
 
