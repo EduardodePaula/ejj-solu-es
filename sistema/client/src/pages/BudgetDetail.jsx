@@ -11,6 +11,7 @@ export default function BudgetDetail() {
   const [budget, setBudget] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   function load() {
     api.get(`/budgets/${id}`).then((res) => setBudget(res.data));
@@ -29,6 +30,23 @@ export default function BudgetDetail() {
     }
   }
 
+  // A rota de PDF exige login (Bearer token), então não dá para abrir com um
+  // <a href> comum — o navegador não manda o token. Buscamos como blob
+  // autenticado e abrimos numa aba nova a partir dele.
+  async function handleViewPdf() {
+    setError('');
+    setPdfLoading(true);
+    try {
+      const res = await api.get(`/budgets/${id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      window.open(url, '_blank');
+    } catch (err) {
+      setError('Erro ao gerar PDF do orçamento.');
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   if (!budget) return <p>Carregando...</p>;
 
   return (
@@ -36,9 +54,9 @@ export default function BudgetDetail() {
       <div className="page-header">
         <h1>Orçamento {budget.code}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <a className="btn secondary" href={`/api/budgets/${id}/pdf`} target="_blank" rel="noreferrer">
-            Ver PDF
-          </a>
+          <button className="btn secondary" onClick={handleViewPdf} disabled={pdfLoading}>
+            {pdfLoading ? 'Gerando PDF...' : 'Ver PDF'}
+          </button>
           <Link className="btn secondary" to="/orcamentos">
             Voltar
           </Link>

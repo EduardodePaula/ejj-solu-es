@@ -9,6 +9,8 @@ function fmt(v) {
 export default function ContractDetail() {
   const { id } = useParams();
   const [contract, setContract] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState('');
 
   function load() {
     api.get(`/contracts/${id}`).then((res) => setContract(res.data));
@@ -22,6 +24,23 @@ export default function ContractDetail() {
     load();
   }
 
+  // A rota de PDF exige login (Bearer token), então não dá para abrir com um
+  // <a href> comum — o navegador não manda o token. Buscamos como blob
+  // autenticado e abrimos numa aba nova a partir dele.
+  async function handleViewPdf() {
+    setPdfError('');
+    setPdfLoading(true);
+    try {
+      const res = await api.get(`/contracts/${id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      window.open(url, '_blank');
+    } catch (err) {
+      setPdfError('Erro ao gerar PDF do contrato.');
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   if (!contract) return <p>Carregando...</p>;
 
   return (
@@ -29,14 +48,16 @@ export default function ContractDetail() {
       <div className="page-header">
         <h1>Contrato {contract.code}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <a className="btn secondary" href={`/api/contracts/${id}/pdf`} target="_blank" rel="noreferrer">
-            Ver PDF
-          </a>
+          <button className="btn secondary" onClick={handleViewPdf} disabled={pdfLoading}>
+            {pdfLoading ? 'Gerando PDF...' : 'Ver PDF'}
+          </button>
           <Link className="btn secondary" to="/contratos">
             Voltar
           </Link>
         </div>
       </div>
+
+      {pdfError && <p className="error-text">{pdfError}</p>}
 
       <div className="grid-cards">
         <div className="card">
