@@ -21,4 +21,20 @@ async function generateProjectScope(items, notes) {
   return provider.generateProjectScope(items, notes);
 }
 
-module.exports = { generateProjectScope };
+// Chamado uma vez na subida do servidor para deixar claro nos logs se a
+// redação por IA está realmente ativa (e com qual provedor) — sem isso, uma
+// chave mal configurada só aparece como "o texto não mudou", sem nenhuma
+// pista de por quê.
+function logStatus() {
+  const providerName = (process.env.AI_PROVIDER || 'claude').toLowerCase();
+  const provider = getProvider();
+  if (provider.isEnabled()) {
+    console.log(`[proposalAi] Redação do escopo por IA ATIVA (provider: ${providerName}).`);
+  } else {
+    console.log(
+      `[proposalAi] Redação do escopo por IA DESATIVADA (provider configurado: ${providerName}, mas sem chave válida) — usando texto automático sem IA.`
+    );
+  }
+}
+
+module.exports = { generateProjectScope, logStatus };

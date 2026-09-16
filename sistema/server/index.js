@@ -15,6 +15,7 @@ const contractsRoutes = require('./routes/contracts');
 const dashboardRoutes = require('./routes/dashboard');
 const cronRoutes = require('./routes/cron');
 const publicBudgetsRoutes = require('./routes/publicBudgets');
+const proposalAi = require('./services/proposalAi');
 
 const app = express();
 app.use(cors());
@@ -46,4 +47,5 @@ app.get('*', (req, res, next) => {
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`[server] Sistema EJJ rodando na porta ${PORT}`);
+  proposalAi.logStatus();
 });
