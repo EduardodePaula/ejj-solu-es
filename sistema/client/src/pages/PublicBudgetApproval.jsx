@@ -123,7 +123,7 @@ export default function PublicBudgetApproval() {
               {budget.items.map((item) => (
                 <tr key={item.id}>
                   <td>{item.description}</td>
-                  <td>{item.quantity}</td>
+                  <td>{item.quantity} {item.unit || 'un'}</td>
                   <td>{fmt(item.unit_price)}</td>
                   <td>{fmt(item.total)}</td>
                 </tr>

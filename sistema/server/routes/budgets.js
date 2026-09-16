@@ -12,12 +12,14 @@ router.use(requireAuth);
 function getFullBudget(id) {
   const budget = db.prepare('SELECT * FROM budgets WHERE id = ?').get(id);
   if (!budget) return null;
-  // O category vem do catálogo (produto/serviço) para permitir separar
-  // equipamentos de mão de obra no PDF do orçamento; itens avulsos (sem
-  // catalog_item_id) entram como "servico" por padrão.
+  // category/unit/catalog_description vêm do catálogo para o PDF conseguir
+  // separar equipamentos de mão de obra, mostrar a unidade de medida ao lado
+  // da quantidade e compor o escopo do projeto automaticamente a partir dos
+  // itens adicionados; itens avulsos (sem catalog_item_id) usam os padrões.
   const items = db
     .prepare(
-      `SELECT bi.*, COALESCE(ci.category, 'servico') AS category
+      `SELECT bi.*, COALESCE(ci.category, 'servico') AS category,
+              COALESCE(ci.unit, 'un') AS unit, ci.description AS catalog_description
        FROM budget_items bi
        LEFT JOIN catalog_items ci ON ci.id = bi.catalog_item_id
        WHERE bi.budget_id = ?`

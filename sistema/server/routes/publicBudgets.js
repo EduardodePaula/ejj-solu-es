@@ -13,7 +13,8 @@ function getBudgetByToken(token) {
   if (!budget) return null;
   const items = db
     .prepare(
-      `SELECT bi.*, COALESCE(ci.category, 'servico') AS category
+      `SELECT bi.*, COALESCE(ci.category, 'servico') AS category,
+              COALESCE(ci.unit, 'un') AS unit, ci.description AS catalog_description
        FROM budget_items bi
        LEFT JOIN catalog_items ci ON ci.id = bi.catalog_item_id
        WHERE bi.budget_id = ?`

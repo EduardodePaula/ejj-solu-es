@@ -69,6 +69,21 @@ function money(v) {
   return `R$ ${currency(v)}`;
 }
 
+// Monta automaticamente o texto do "Escopo do projeto" a partir dos itens do
+// catálogo adicionados ao orçamento (quantidade, unidade de medida e a
+// descrição detalhada cadastrada no catálogo, quando houver).
+function buildProjectScopeText(items) {
+  if (!items || items.length === 0) return '';
+
+  const parts = items.map((item) => {
+    const qty = `${item.quantity} ${item.unit || 'un'}`;
+    const detail = item.catalog_description && item.catalog_description.trim() ? ` (${item.catalog_description.trim()})` : '';
+    return `${qty} de ${item.description}${detail}`;
+  });
+
+  return `O projeto contempla o fornecimento e/ou a execução de: ${parts.join('; ')}.`;
+}
+
 function contentWidth(doc) {
   return doc.page.width - doc.page.margins.left - doc.page.margins.right;
 }
@@ -163,7 +178,7 @@ function drawItemsTable(doc, title, rows) {
   } else {
     rows.forEach((item) => {
       y = ensureRowSpace(doc, y, 20, drawHeaderRow);
-      y = drawRow(doc, x, y, colWidths, [item.description, item.quantity, money(item.unit_price), money(item.total)], {
+      y = drawRow(doc, x, y, colWidths, [item.description, `${item.quantity} ${item.unit || 'un'}`, money(item.unit_price), money(item.total)], {
         bg: LIGHT_BLUE,
         align,
       });
@@ -299,7 +314,12 @@ function renderBudgetPdf(res, budget, client, items) {
   bulletList(doc, SCOPE_ITEMS);
 
   sectionHeading(doc, '2.1 Escopo do projeto');
-  paragraph(doc, budget.notes && budget.notes.trim() ? budget.notes : 'A detalhar conforme visita técnica e itens orçados abaixo.');
+  const autoScope = buildProjectScopeText(items);
+  paragraph(doc, autoScope || 'A detalhar conforme visita técnica e itens orçados abaixo.');
+  if (budget.notes && budget.notes.trim()) {
+    doc.moveDown(0.4);
+    paragraph(doc, `Observações adicionais: ${budget.notes.trim()}`);
+  }
 
   sectionHeading(doc, '3. Notas');
   paragraph(doc, 'Esta proposta não inclui serviços de:');
