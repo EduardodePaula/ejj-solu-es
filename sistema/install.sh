@@ -47,24 +47,48 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# 1) Node.js 18+
+# 1) Node.js 18+ — sem a versão empacotada pelo Kali/Debian (libnode compartilhada)
 # ---------------------------------------------------------------------------
-NEED_NODE_INSTALL=true
+# O pacote "nodejs" do Kali/Debian linka contra uma libnode.so compartilhada.
+# Isso é conhecido por travar (SIGABRT) módulos nativos como o SQLite usado
+# aqui, com erros do tipo "RemoveEnvironmentCleanupHook ... Assertion failed".
+# Para evitar isso, instalamos/usamos um Node.js oficial (binário estático do
+# nodejs.org) via nvm, isolado do Node do sistema.
+NODE_OK=false
+NODE_SWITCHED=false
+
 if command -v node >/dev/null 2>&1; then
   NODE_MAJOR="$(node -v | sed 's/^v//' | cut -d. -f1)"
-  if [ "$NODE_MAJOR" -ge 18 ]; then
-    NEED_NODE_INSTALL=false
-    success "Node.js $(node -v) já instalado."
+  NODE_BIN="$(command -v node)"
+  if [ "$NODE_MAJOR" -ge 18 ] && [ "$NODE_MAJOR" -le 22 ] && ! ldd "$NODE_BIN" 2>/dev/null | grep -q libnode; then
+    NODE_OK=true
+    success "Node.js $(node -v) já instalado e compatível."
+  elif ldd "$NODE_BIN" 2>/dev/null | grep -q libnode; then
+    warn "Node.js $(node -v) do sistema usa libnode compartilhada (comum no Kali/Debian) — isso trava módulos nativos como o SQLite. Vou instalar um Node.js oficial à parte via nvm."
   else
-    warn "Node.js $(node -v) é antigo demais (precisa de 18+). Vou atualizar."
+    warn "Node.js $(node -v) fora da faixa recomendada (18 a 22). Vou instalar a versão 20 via nvm."
   fi
 fi
 
-if [ "$NEED_NODE_INSTALL" = true ]; then
-  info "Instalando Node.js 20.x via NodeSource (pode pedir sua senha do sudo)..."
-  curl -fsSL https://deb.nodesource.com/setup_20.x | $SUDO bash -
-  $SUDO apt-get install -y nodejs
-  success "Node.js $(node -v) instalado."
+if [ "$NODE_OK" = false ]; then
+  NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+    info "Instalando nvm (Node Version Manager) para obter um Node.js oficial, isolado do pacote do sistema..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  fi
+
+  info "Instalando/ativando Node.js 20 LTS via nvm..."
+  set +u
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+  nvm install 20
+  nvm use 20
+  nvm alias default 20
+  set -u
+
+  success "Node.js $(node -v) (via nvm) ativo para esta instalação."
+  warn "Em novos terminais, rode 'nvm use 20' antes de usar 'npm'/'node' neste projeto (ou abra um terminal novo, o nvm já deixa configurado por padrão)."
+  NODE_SWITCHED=true
 fi
 
 # ---------------------------------------------------------------------------
@@ -132,6 +156,11 @@ fi
 # ---------------------------------------------------------------------------
 # 4) Instalar backend
 # ---------------------------------------------------------------------------
+if [ "$NODE_SWITCHED" = true ] && [ -d "$SERVER_DIR/node_modules" ]; then
+  warn "Removendo node_modules antigo do backend (foi compilado com outro Node.js) para recompilar do zero..."
+  rm -rf "$SERVER_DIR/node_modules"
+fi
+
 info "Instalando dependências do backend (server/)..."
 npm install --prefix "$SERVER_DIR"
 success "Backend pronto."
@@ -174,6 +203,10 @@ else
   PORT="${PORT:-4000}"
   echo
   success "Instalação concluída."
+  if [ "$NODE_SWITCHED" = true ]; then
+    warn "Este terminal ainda está usando o Node.js antigo do sistema. Abra um terminal NOVO"
+    warn "(ou rode 'source ~/.bashrc') antes do próximo comando, para usar o Node.js do nvm."
+  fi
   echo "Para iniciar o sistema agora, rode:"
   echo "  cd $(realpath --relative-to="$PWD" "$SERVER_DIR" 2>/dev/null || echo "$SERVER_DIR") && npm start"
   echo "Depois acesse: http://localhost:${PORT}"
