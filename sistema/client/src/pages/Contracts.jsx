@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconContracts } from '../components/icons.jsx';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -59,12 +61,11 @@ export default function Contracts() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Contratos de Manutenção Preventiva</h1>
+      <PageHeader icon={IconContracts} title="Contratos de Manutenção Preventiva" breadcrumb={['Início', 'Contratos']}>
         <button className="btn" onClick={() => setShowForm(true)}>
           + Gerar contrato
         </button>
-      </div>
+      </PageHeader>
 
       <table>
         <thead>

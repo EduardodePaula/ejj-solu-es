@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconDashboard } from '../components/icons.jsx';
+import { budgetStatusBadge } from '../budgetStatus.js';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -17,9 +20,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Visão geral</h1>
-      </div>
+      <PageHeader icon={IconDashboard} title="Visão geral" breadcrumb={['Início', 'Dashboard']} />
 
       <div className="grid-cards">
         <div className="card stat-card">
@@ -73,7 +74,9 @@ export default function Dashboard() {
                   <Link to={`/orcamentos/${b.id}`}>{b.code}</Link>
                 </td>
                 <td>{b.client_name}</td>
-                <td>{b.status}</td>
+                <td>
+                  <span className={`badge ${budgetStatusBadge[b.status] || 'muted'}`}>{b.status}</span>
+                </td>
                 <td>{fmt(b.total)}</td>
               </tr>
             ))}

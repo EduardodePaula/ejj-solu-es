@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconFinancial } from '../components/icons.jsx';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -39,9 +41,7 @@ export default function Financial() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Financeiro</h1>
-      </div>
+      <PageHeader icon={IconFinancial} title="Financeiro" breadcrumb={['Início', 'Financeiro']} />
 
       {summary && (
         <div className="grid-cards">

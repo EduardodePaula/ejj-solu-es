@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconClients } from '../components/icons.jsx';
 
 const emptyForm = { name: '', document: '', type: 'pessoa_fisica', email: '', phone: '', address: '', city: '', state: '', zip: '' };
 
@@ -87,12 +89,11 @@ export default function Clients() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Clientes</h1>
+      <PageHeader icon={IconClients} title="Clientes" breadcrumb={['Início', 'Clientes']}>
         <button className="btn" onClick={openCreate}>
           + Novo cliente
         </button>
-      </div>
+      </PageHeader>
 
       <form onSubmit={handleSearch} style={{ marginBottom: '1rem', maxWidth: 320 }}>
         <input placeholder="Buscar por nome, documento ou e-mail" value={q} onChange={(e) => setQ(e.target.value)} />

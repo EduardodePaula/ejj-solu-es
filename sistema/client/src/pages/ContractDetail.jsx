@@ -63,7 +63,7 @@ export default function ContractDetail() {
         <div className="card">
           <strong>Cliente:</strong> {contract.client.name}
           <br />
-          <strong>Status:</strong> <span className="badge green">{contract.status}</span>
+          <strong>Status:</strong> <span className={`badge ${contract.status === 'ativo' ? 'green' : 'danger'}`}>{contract.status}</span>
           <br />
           <strong>Mensalidade:</strong> {fmt(contract.monthly_value)}
         </div>

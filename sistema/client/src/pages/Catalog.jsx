@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconCatalog } from '../components/icons.jsx';
 
 const emptyForm = { name: '', description: '', category: 'servico', unit_price: '', unit: 'un' };
 
@@ -59,12 +61,11 @@ export default function Catalog() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Catálogo de serviços e produtos</h1>
+      <PageHeader icon={IconCatalog} title="Catálogo de serviços e produtos" breadcrumb={['Início', 'Catálogo']}>
         <button className="btn" onClick={openCreate}>
           + Novo item
         </button>
-      </div>
+      </PageHeader>
 
       <table>
         <thead>

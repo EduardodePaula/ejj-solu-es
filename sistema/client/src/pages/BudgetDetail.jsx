@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import api from '../api';
+import { budgetStatusBadge } from '../budgetStatus.js';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -76,7 +77,7 @@ export default function BudgetDetail() {
       <div className="card" style={{ marginBottom: '1.5rem' }}>
         <p>
           <strong>Cliente:</strong> {budget.client.name} &nbsp;|&nbsp; <strong>Status:</strong>{' '}
-          <span className="badge green">{budget.status}</span>
+          <span className={`badge ${budgetStatusBadge[budget.status] || 'muted'}`}>{budget.status}</span>
         </p>
         <p>
           <strong>Validade:</strong> {budget.validity_days} dias &nbsp;|&nbsp; <strong>Criado em:</strong>{' '}

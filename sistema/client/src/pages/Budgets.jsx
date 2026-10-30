@@ -1,17 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconBudgets } from '../components/icons.jsx';
+import { budgetStatusBadge } from '../budgetStatus.js';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
-
-const statusBadge = {
-  rascunho: 'muted',
-  enviado: 'warning',
-  aprovado: 'green',
-  rejeitado: 'danger',
-};
 
 export default function Budgets() {
   const [budgets, setBudgets] = useState([]);
@@ -97,12 +93,11 @@ export default function Budgets() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Orçamentos</h1>
+      <PageHeader icon={IconBudgets} title="Orçamentos" breadcrumb={['Início', 'Orçamentos']}>
         <button className="btn" onClick={() => setShowForm(true)}>
           + Gerar orçamento
         </button>
-      </div>
+      </PageHeader>
 
       <table>
         <thead>
@@ -122,7 +117,7 @@ export default function Budgets() {
               </td>
               <td>{b.client_name}</td>
               <td>
-                <span className={`badge ${statusBadge[b.status] || 'muted'}`}>{b.status}</span>
+                <span className={`badge ${budgetStatusBadge[b.status] || 'muted'}`}>{b.status}</span>
               </td>
               <td>{fmt(b.total)}</td>
               <td>{new Date(b.created_at).toLocaleDateString('pt-BR')}</td>

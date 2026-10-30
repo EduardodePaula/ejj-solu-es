@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
+import PageHeader from '../components/PageHeader.jsx';
+import { IconServiceOrders } from '../components/icons.jsx';
 
 function fmt(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -24,9 +26,7 @@ export default function ServiceOrders() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>Ordens de Serviço</h1>
-      </div>
+      <PageHeader icon={IconServiceOrders} title="Ordens de Serviço" breadcrumb={['Início', 'Ordens de Serviço']} />
 
       <table>
         <thead>
